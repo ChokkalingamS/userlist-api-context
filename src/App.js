@@ -201,13 +201,14 @@ function Userlist()
   
   const {data,setData}=useContext(context)
 
-  // Delete Userdata
+  
   const getdata=()=>{fetch(`${URL}/userlist`,
   {method:'GET'}).then((x)=>x.json()).then((x)=>setData(x))
 }   
 
-useEffect(getdata,[])
+useEffect(getdata,[setData])
 
+// Delete User
 const deleteuser=(id)=>{
   fetch(`${URL}/userlist/${id}`,{method:"DELETE"}).then((x)=>x.json()).then(()=>getdata())
 }
@@ -272,7 +273,7 @@ function Features({deleteuser,id})
   </Tooltip>
   
   {/* Edit Userlist Component */}
-  {(count===1)&&<Updateuserlist id={id} setCount={setCount} />}
+  {(count===1)?<Updateuserlist id={id} setCount={setCount} />:null}
  
   
   </div>)
@@ -320,7 +321,6 @@ function Adduserlist()
 function Updateuserlist({id,setCount})
 { 
   const [user,setUser]=useState(null)
-
   const [open, setOpen] = useState(false);
   const handleClickOpen = () => {setOpen(true);}
 
@@ -342,7 +342,7 @@ useEffect(()=>{
 
 function Updateuser({open,user,id,handleClickOpen,setCount})
 {
-  let {setData,data} =useContext(context) 
+  let {setData} =useContext(context) 
 
   if(user)
   {
@@ -372,7 +372,7 @@ const getdata=()=>{fetch(`${URL}/userlist`,
 {method:'GET'}).then((x)=>x.json()).then((x)=>setData(x))
 }   
 
-useEffect(getdata,[])
+
 
   // Updated User data Object
   const updateduser={Name:name,Avatar:picurl,Mobile:+mobilenum,Mail:mail,Status:"Active"}
