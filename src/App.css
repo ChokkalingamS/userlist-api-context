@@ -81,6 +81,12 @@ body{
   margin-top:1rem;
 }
 
+/* Navbutton */
+.navbutton
+{
+  margin: auto;
+}
+
 /* Table */
 #table
 {
@@ -94,6 +100,18 @@ body{
   margin:5rem 20rem;
   
 }
+/* Add text field */
+.Addtextfield
+{
+  width:40rem;
+}
+
+/* Update text field */
+.Updatetextfield
+{
+  width:27rem;
+  margin:0.5rem !important;
+}
 
 /* Float Icon */
 #floaticon
@@ -102,6 +120,7 @@ body{
   margin-bottom: 1rem;
 }
 
+/* Footer Section */
 .footer
 {
   text-Align:center;

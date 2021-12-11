@@ -3,6 +3,10 @@ import './App.css';
 import {useState,Fragment,createContext,useContext,useEffect} from 'react'
 import{Switch,Route,useHistory,Redirect} from "react-router-dom";
 
+// Validation
+import {useFormik} from 'formik';
+import * as yup from 'yup';
+
 // Material UI
 
 // Popup Menu
@@ -92,18 +96,18 @@ function Container()
     setState({ ...state, [anchor]: open });
   };
 
+  // Nav Bar Button
+  const Users=<p onClick={()=>history.push('/users')} className='navbutton'>Users</p>
+  const Adduser=<p onClick={()=>history.push('/Adduser')} className='navbutton'>Add User</p> 
+  const Moreinfo=<p onClick={()=>history.push('/Moreinfo')} className='navbutton'>More Info</p>
+  const Settings=<p onClick={()=>history.push('/Settings')} className='navbutton'>Settings</p>
 
-  const Users=<p onClick={()=>history.push('/users')} style={{margin:'auto'}}>Users</p>
-  const Adduser=<p onClick={()=>history.push('/Adduser')} style={{margin:'auto'}}>Adduser</p> 
-  const Moreinfo=<p onClick={()=>history.push('/Moreinfo')} style={{margin:'auto'}}>More Info</p>
-  const Settings=<p onClick={()=>history.push('/Settings')} style={{margin:'auto'}}>Settings</p>
   const list = (anchor) => (
     <Box
       sx={{ width: anchor === "top" || anchor === "bottom" ? "auto" : 250 }}
       role="presentation"
       onClick={toggleDrawer(anchor, false)}
-      onKeyDown={toggleDrawer(anchor, false)}
-    >
+      onKeyDown={toggleDrawer(anchor, false)}>
       
       <List>
         {[Users, Adduser,Moreinfo,Settings].map((text, index) => (
@@ -178,10 +182,11 @@ function Container()
                  <Route path='/users'><Userlist/></Route>
                 <Route path='/Adduser'><Adduserlist /></Route> 
                 <Route exact path='/'><Redirect to='/users'/></Route>
-                <Route path='/Moreinfo'>Comming Soon. . .😎</Route>
-                <Route path='/Settings'>Comming Soon. . .😎</Route>
+                <Route path='/Moreinfo'>Comming Soon. . .</Route>
+                <Route path='/Settings'>Comming Soon. . .</Route>
                </Switch>
                </context.Provider>
+
               {/* Footer */}
               <footer className="footer" style={{backgroundColor:(themechange==='light')&&"#7b49d3"}}>
               <p className="footercontent">Copyright © UserList Webpage 2021</p>
@@ -201,10 +206,9 @@ function Userlist()
   
   const {data,setData}=useContext(context)
 
-  
+  // Getting Data
   const getdata=()=>{fetch(`${URL}/userlist`,
-  {method:'GET'}).then((x)=>x.json()).then((x)=>setData(x))
-}   
+  {method:'GET'}).then((x)=>x.json()).then((x)=>setData(x))}   
 
 useEffect(getdata,[setData])
 
@@ -248,10 +252,11 @@ const deleteuser=(id)=>{
         </TableBody>
         </Table> 
         </TableContainer>
+
         {/* Navigate Button */}
-          <Fab variant="extended" id="floaticon" onClick={()=>window.scroll(-500,0)}><NavigationIcon sx={{ mr: 1 }} />Navigate</Fab>  
-          </div>
-          )      
+        <Fab variant="extended" id="floaticon" onClick={()=>window.scroll(-500,0)}><NavigationIcon sx={{ mr: 1 }} />Navigate</Fab>  
+        </div>
+        )      
      }
 
 
@@ -273,6 +278,7 @@ function Features({deleteuser,id})
   </Tooltip>
   
   {/* Edit Userlist Component */}
+  {/* Condional Rendering */}
   {(count===1)?<Updateuserlist id={id} setCount={setCount} />:null}
  
   
@@ -284,14 +290,6 @@ function Features({deleteuser,id})
 function Adduserlist()
 {
   let {history} =useContext(context) 
-  const[name,setName]=useState('')
-  const[picurl,setPicurl]=useState('')
-  const[mobilenum,setMobilenum]=useState('')
-  const[mail,setMail]=useState('')
-  
-
-  // Newly Added Userdata Object
-  const newuser={Name:name,Avatar:picurl,Mobile:+mobilenum,Mail:mail,Status:"Active"}
 
   // Add user to the database
   const adduser=(newuser)=>{
@@ -299,21 +297,46 @@ function Adduserlist()
     {method:"POST",
     body   :JSON.stringify(newuser),
   headers:{'Content-Type':'application/json'}}).then((user)=>user.json()).then(()=>history.push('/users'))
-  }
+  } 
+
+  // Newly Added Userdata Object with validation
+  let validation=yup.object({
+    Name:yup.string().required(),
+    Avatar:yup.string().required(),
+    Mobile:yup.number().typeError('you must specify a number').required(),  
+    Mail:yup.string().required(),
+  })
+
+  const {handleChange,handleBlur,handleSubmit,values,errors,touched}=useFormik({
+    initialValues:{Name:'',Avatar:'',Mail:'',Mobile:'',Status:"Active"},
+    validationSchema:validation,
+    onSubmit:(newuser)=>adduser(newuser)
+  })
+ 
   return (
-         <div className="Adduserlist">
+         <form className="Adduserlist" onSubmit={handleSubmit}>
 
          {/* TextField */}
-        <TextField  style={{width:'40rem'}} required label="Name" id="filled-basic" variant="standard"type="text"   onInput={(e)=>setName(e.target.value)}      placeholder="Enter the username" /><br/>
-        <TextField  style={{width:'40rem'}} required label="Photo" id="filled-basic" variant="standard"  type="text"   onInput={(e)=>setPicurl(e.target.value)}    placeholder="Profile pic url" /><br/>
-        <TextField  style={{width:'40rem'}} required label="Mobile Number" id="filled-basic" variant="standard" type="number" onInput={(e)=>setMobilenum(e.target.value)} placeholder="Enter the Mobile Number" /><br/>
-        <TextField  style={{width:'40rem'}} required label="Mail" id="filled-basic" variant="standard" type="mail"   onInput={(e)=>setMail(e.target.value)}      placeholder="Enter the Mailid" /><br/>
+        <TextField  className='Addtextfield' label="Name" id="Name" name="Name" variant="standard" type="text"
+        onBlur={handleBlur}  onInput={handleChange}   error={errors.Name && touched.Name}    value={values.Name}
+        helperText={errors.Name && touched.Name &&errors.Name}  placeholder="Enter the username" /><br/>
+        
+        <TextField  className='Addtextfield' label="Photo" id="Avatar" name='Avatar' variant="standard"  type="text" 
+         onBlur={handleBlur}   onInput={handleChange}    error={errors.Avatar && touched.Avatar}  value={values.Avatar}
+         helperText={errors.Avatar && touched.Avatar &&errors.Avatar}  placeholder="Profile pic url" /><br/>
+        
+        <TextField  className='Addtextfield' label="Mobile Number" id="Mobile" name='Mobile' variant="standard" type="text" 
+        onBlur={handleBlur}   onInput={handleChange}   error={errors.Mobile && touched.Mobile}  value={values.Mobile}
+        helperText={errors.Mobile && touched.Mobile &&errors.Mobile} placeholder="Enter the Mobile Number" /><br/>
+        
+        <TextField  className='Addtextfield' label="Mail" id="Mail" name='Mail' variant="standard" type="mail"
+         onBlur={handleBlur}    onInput={handleChange}     error={errors.Mail && touched.Mail}  value={values.Mail}
+         helperText={errors.Mail && touched.Mail &&errors.Mail}   placeholder="Enter the Mailid" /><br/>
         <br/>
-        <Button  variant="contained" style={{marginRight:'4rem',marginBottom:"1rem"}}
-        onClick={()=>adduser(newuser)}>Add User</Button>
+        <Button type='Submit' variant="contained" style={{marginRight:'4rem',marginBottom:"1rem"}}>Add User</Button>
         
         <Button  variant="contained" onClick={()=>history.push('/users')} style={{marginLeft:'25.5rem',marginBottom:"1rem"}}>Back</Button>
-  </div>)
+  </form>)
 }
 
 
@@ -327,6 +350,7 @@ function Updateuserlist({id,setCount})
 useEffect(()=>{
   fetch(`${URL}/userlist/${id}`,{method:'GET'}).then((x)=>x.json()).then((x)=>setUser(x))},[id])
 
+// Component will render only after getting the data
  if(user!==null)
 {   
   
@@ -339,32 +363,22 @@ useEffect(()=>{
 }
 
 
-
 function Updateuser({open,user,id,handleClickOpen,setCount})
 {
   let {setData} =useContext(context) 
-
-  if(user)
-  {
-    handleClickOpen()
-  }
-
   // Destruturing from old user data
   const{Name,Avatar,Mobile,Mail}=user
+
+  // Opens the dialogbox
+  handleClickOpen()
   
-
-  const[name,setName]=useState(Name)
-  const[picurl,setPicurl]=useState(Avatar)
-  const[mobilenum,setMobilenum]=useState(Mobile)
-  const[mail,setMail]=useState(Mail)
-
-
+  // Update user data
 const updateuser=(updateduser)=>{
   fetch(`${URL}/userlist/${id}`,
   {method:"PUT",
   body:JSON.stringify(updateduser),
   headers:{'Content-Type':'Application/Json'}
-}).then((x)=>x.json()).then(()=> getdata())
+}).then((x)=>x.json()).then(()=>setCount(0)).then(()=> getdata())
 }
 
 // Get data after the update
@@ -372,30 +386,54 @@ const getdata=()=>{fetch(`${URL}/userlist`,
 {method:'GET'}).then((x)=>x.json()).then((x)=>setData(x))
 }   
 
+// Validation
+  let validation=yup.object({
+    Name:yup.string().required(),
+    Avatar:yup.string().required(),
+    Mobile:yup.number().typeError('Must Be a Number').required(),
+    Mail:yup.string().required(),
+  })
 
-
-  // Updated User data Object
-  const updateduser={Name:name,Avatar:picurl,Mobile:+mobilenum,Mail:mail,Status:"Active"}
+ 
+  const {handleChange,handleSubmit,handleBlur,values,errors,touched}=useFormik({
+    initialValues:{Name:Name,Avatar:Avatar,Mobile:Mobile,Mail:Mail,Status:'Active'},
+    validationSchema:validation,
+    onSubmit:(updateduser)=>updateuser(updateduser)
+  }
+  )
 
   return( 
-        <div className="Updateuserlist">
+        <div className="Updateuserlist"  >
         {/* Popup Menu */}
-        <Dialog open={open} >
+        <Dialog open={open}>
+
+        <form onSubmit={handleSubmit}>
+
         <DialogTitle>Update User</DialogTitle>
 
          {/* TextField */}
-        <DialogContent style={{width:'30rem'}}>
-        <TextField type="text"    value={name}       required  onInput={(e)=>setName(e.target.value)}       style={{width:'27rem'}}  label="Name" id="filled-basic" variant="filled"    placeholder="Enter the username" /><br/>
-        <TextField type="text"    value={picurl}     required  onInput={(e)=>setPicurl(e.target.value)}     style={{width:'27rem'}}  label="Picture" id="filled-basic" variant="filled"    placeholder="Profile pic url" /><br/>
-        <TextField type="number"  value={mobilenum}  required  onInput={(e)=>setMobilenum(e.target.value)}  style={{width:'27rem'}}  label="Mobile" id="filled-basic" variant="filled"    placeholder="Enter the Mobile Number" /><br/>
-        <TextField type="mail"    value={mail}       required  onInput={(e)=>setMail(e.target.value)}       style={{width:'27rem'}}  label="Mail" id="filled-basic" variant="filled"    placeholder="Enter the Mailid" /><br/>
+        <DialogContent>
+        <TextField type="text"    value={values.Name}      name='Name'   id='Name'      onInput={handleChange} onBlur={handleBlur}
+         error={errors.Name && touched.Name}               helperText={errors.Name && touched.Name &&errors.Name}
+        className='Updatetextfield' label="Name"  variant="standard"    placeholder="Enter the username" /><br/>
+
+        <TextField type="text"    value={values.Avatar}    name='Avatar' id='Avatar'  onInput={handleChange} onBlur={handleBlur}
+        error={errors.Avatar && touched.Avatar}            helperText={errors.Avatar && touched.Avatar &&errors.Avatar} 
+        className='Updatetextfield' label="Picture" variant="standard"    placeholder="Profile pic url" /><br/>
+
+        <TextField type="string"  value={values.Mobile}    name='Mobile' id='Mobile'     onInput={handleChange} onBlur={handleBlur}
+        error={errors.Mobile && touched.Mobile}            helperText={errors.Mobile && touched.Mobile &&errors.Mobile}
+        className='Updatetextfield' label="Mobile"  variant="standard"    placeholder="Enter the Mobile Number" /><br/>
+
+        <TextField type="mail"    value={values.Mail}      name='Mail'   id='Mail'      onInput={handleChange} onBlur={handleBlur} 
+        error={errors.Mail && touched.Mail}                helperText={errors.Mail && touched.Mail &&errors.Mail}
+         className='Updatetextfield' label="Mail"  variant="standard"    placeholder="Enter the Mailid" /><br/>
         </DialogContent>
 
         <DialogActions>
-        <Button  variant="contained"  style={{marginRight:'5rem',marginBottom:"1rem"}}
-         onClick={()=>{ updateuser(updateduser);setCount(0); }}>Save</Button>
+        <Button  variant="contained" type='submit'  style={{marginRight:'5rem',marginBottom:"1rem"}}>Save</Button>
         </DialogActions>
-        
+        </form>
         </Dialog>
         </div>)
 }
